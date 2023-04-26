@@ -18,16 +18,16 @@ void primeinit(){
     }
 }
 
-unsigned int findprime(unsigned int min,unsigned int max){
-    unsigned int r = min+rand()%(max-min+1);
+ui findprime(ui min,ui max){
+    ui r = min+rand()%(max-min+1);
     while(primes[r]==0)
         r = min+rand()%(max-2+1);
     return r;
 }
-unsigned int findP(unsigned int q){
-    unsigned int max = pow(2,12);
-    unsigned int min = pow(2,11);
-    unsigned int p = findprime(min+1,max-1);
+ui findP(ui q){
+    ui max = pow(2,12);
+    ui min = pow(2,11);
+    ui p = findprime(min+1,max-1);
 
     while(p%q!=1){
         p = findprime(min+1,max-1);
@@ -35,11 +35,11 @@ unsigned int findP(unsigned int q){
     return p;
 }
 
-unsigned int findH(unsigned int p,unsigned int q){
-    unsigned int d = (p-1)/q;
+ui findH(ui p,ui q){
+    ui d = (p-1)/q;
     
-    unsigned int h = 2+(rand()%(p-2-2+1));
-    unsigned int s = 1;
+    ui h = 2+(rand()%(p-2-2+1));
+    ui s = 1;
     for(int i = 0;i<d;i++){
         s = ((s*h)%p); 
     }
@@ -83,15 +83,27 @@ int euclidAlgoInv(int num,int base){
     return y<0?base+y:y;
 }
 
+ui hash1024(char* msg){
+    int len = strlen(msg);
+    ui hash = 0;
+    for(int i = 0;i<len;i++){
+        hash = (hash+msg[i])%1024
+    }
+    return hash;
+}
+
 //l 12(2^30), n<l and n 8(2^8 = 256 ) h 10(2^1024)
 int main(){
     srand(time(NULL));
     primeinit();
-    unsigned int q = findprime(129,255);
+    char msg[1000];
+    prinf("Input message : ",msg);
+    scanf("%s"msg);
+    ui q = findprime(129,255);
     printf("q=%d\n",q);
-    unsigned int p = findP(q);
+    ui p = findP(q);
     printf("p=%d\n",p);
-    unsigned int h = 2+(rand()%(p-2));
+    ui h = 2+(rand()%(p-2));
     ui g = powe(h,(p-1)/q,p);
     ui pk = 1+(rand()%(q-1));
     ui y = powe(g,pk,p);
@@ -99,15 +111,17 @@ int main(){
     ui k = 1+(rand()%(q-1));
 
     //sign
+    printf("\nSignature\n");
     ui r = powe(g,k,p)%q;
     printf("r = %d\n",r);
-    ui s = (euclidAlgoInv(k,q)*(((10%1024)+pk*r)%q))%q;
+    ui s = (euclidAlgoInv(k,q)*((hash1024(msg)+pk*r)%q))%q;
     printf("s = %d\n",s);
 
 
     //verify
+    printf("\nVerify\n");
     ui w = euclidAlgoInv(s,q);
-    ui u1 = (10%1024)*(w%q);
+    ui u1 = hash1024(msg)*(w%q);
     ui u2 = (r*w)%q;
     ui v = ((powe(g,u1,p)*powe(y,u2,p))%p)%q;
     printf("v=%d",v);
